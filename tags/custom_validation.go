@@ -66,6 +66,8 @@ var transictionTable = map[State]TransictionFunction{
 			*currentCountry += string(entrySymbol)
 
 			return assemblingCountryCode, nil
+		} else if entrySymbol == ' ' && *currentCountry == "" {
+			return assemblingCountryCode, nil
 		} else if entrySymbol == byte(countryValidationInitializer) {
 			if _, alreadyContaisCountry := (*countries)[*currentCountry]; alreadyContaisCountry {
 				return invalidState, fmt.Errorf("country already exists")
@@ -98,6 +100,9 @@ var transictionTable = map[State]TransictionFunction{
 		} else if IsLetter(entrySymbol) {
 			*accumulator += string(entrySymbol)
 			return assemblingCountryValidationToken, nil
+		} else if entrySymbol == byte(countrySeparator) {
+			*currentCountry = ""
+			return assemblingCountryCode, nil
 		}
 		return invalidState, createUnexpectedSymbolError(entrySymbol, position)
 	},

@@ -16,7 +16,7 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 		validationStr                 string
 		hasErrors                     bool
 		expectedErrorMessage          string
-		expectedCountryValidationInfo CountryValidationInfo
+		expectedCountryValidationInfo map[string]*CountryValidationInfo
 	}{
 		{
 			description:          "fails validation due to unexpected symbol [INITIAL_STATE]",
@@ -52,25 +52,25 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 			description:                   "success validation with country GB and size equal to 1-10  [ASSEMBLING_COUNTRY_VALIDATION]",
 			validationStr:                 " [GB:1-10]",
 			hasErrors:                     false,
-			expectedCountryValidationInfo: CountryValidationInfo{minLen: 1, maxLen: 10},
+			expectedCountryValidationInfo: map[string]*CountryValidationInfo{"GB": {minLen: 1, maxLen: 10}},
 		},
 		{
 			description:                   "success validation with country GB and size equal to 2-120  [ASSEMBLING_COUNTRY_VALIDATION]",
 			validationStr:                 " [GB:12-120]",
 			hasErrors:                     false,
-			expectedCountryValidationInfo: CountryValidationInfo{minLen: 12, maxLen: 120},
+			expectedCountryValidationInfo: map[string]*CountryValidationInfo{"GB": {minLen: 12, maxLen: 120}},
 		},
 		{
 			description:                   "success validation with country GB and size equal to 10",
 			validationStr:                 " [GB:10 ]",
 			hasErrors:                     false,
-			expectedCountryValidationInfo: CountryValidationInfo{minLen: 10, maxLen: 10},
+			expectedCountryValidationInfo: map[string]*CountryValidationInfo{"GB": {minLen: 10, maxLen: 10}},
 		},
 		{
 			description:                   "success validation with country GB and size equal to 10 to 765 and is required [ASSEMBLING_COUNTRY_VALIDATION]",
 			validationStr:                 " [GB:10-765, required ]",
 			hasErrors:                     false,
-			expectedCountryValidationInfo: CountryValidationInfo{minLen: 10, maxLen: 765, required: true},
+			expectedCountryValidationInfo: map[string]*CountryValidationInfo{"GB": {minLen: 10, maxLen: 765, required: true}},
 		},
 		{
 			description:          "success validation with country GB and size equal to 10 to 765 and is required [ASSEMBLING_COUNTRY_VALIDATION]",
@@ -84,11 +84,18 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 			hasErrors:            true,
 			expectedErrorMessage: "unexpected | symbol in position 13",
 		},
-		// {
-		// 	description:   "success validation",
-		// 	validationStr: " [GB:7-10,required | PT:5]",
-		// 	hasErrors:     false,
-		// },
+		{
+			description:                   "success validation",
+			validationStr:                 " [ GB:7-10,required | PT:5]",
+			hasErrors:                     false,
+			expectedCountryValidationInfo: map[string]*CountryValidationInfo{"GB": {minLen: 7, maxLen: 10, required: true}, "PT": {minLen: 5, maxLen: 5}},
+		},
+		{
+			description:                   "success validation",
+			validationStr:                 "[GB:7-10,required | PT:5 | AU:10-12, required]",
+			hasErrors:                     false,
+			expectedCountryValidationInfo: map[string]*CountryValidationInfo{"GB": {minLen: 7, maxLen: 10, required: true}, "PT": {minLen: 5, maxLen: 5}, "AU": {minLen: 10, maxLen: 12, required: true}},
+		},
 	}
 
 	for _, c := range cases {
@@ -99,7 +106,7 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 				assert.Equal(t, c.expectedErrorMessage, err.Error())
 			} else {
 				assert.Nil(t, err)
-				assert.True(t, assertEquals(&c.expectedCountryValidationInfo, cInfo["GB"]))
+				assert.True(t, assertEquals(&c.expectedCountryValidationInfo, &cInfo))
 			}
 
 		})
@@ -165,6 +172,15 @@ func Test_IsNumericWorks(t *testing.T) {
 	}
 }
 
-func assertEquals(expectedCountryInfo, actualCountryInfo *CountryValidationInfo) bool {
-	return expectedCountryInfo.maxLen == actualCountryInfo.maxLen && expectedCountryInfo.minLen == actualCountryInfo.minLen && expectedCountryInfo.required == actualCountryInfo.required
+func assertEquals(expectedCountryInfo, actualCountryInfo *map[string]*CountryValidationInfo) bool {
+	for k, expected := range *expectedCountryInfo {
+		actual := (*actualCountryInfo)[k]
+		if actual == nil {
+			return false
+		}
+		if !(expected.maxLen == actual.maxLen && expected.minLen == actual.minLen && expected.required == actual.required) {
+			return false
+		}
+	}
+	return true
 }
