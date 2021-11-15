@@ -12,10 +12,11 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 	//t.Skip("to be implemented.")
 
 	cases := []struct {
-		description          string
-		validationStr        string
-		hasErrors            bool
-		expectedErrorMessage string
+		description                   string
+		validationStr                 string
+		hasErrors                     bool
+		expectedErrorMessage          string
+		expectedCountryValidationInfo CountryValidationInfo
 	}{
 		{
 			description:          "fails validation due to unexpected symbol [INITIAL_STATE]",
@@ -45,7 +46,25 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 			description:          "fails validation due to unexpected symbol + after symbol 1  [ASSEMBLING_COUNTRY_VALIDATION]",
 			validationStr:        "[GB:1+10 | PT:5]",
 			hasErrors:            true,
-			expectedErrorMessage: "unexpected - symbol in position 5",
+			expectedErrorMessage: "unexpected + symbol in position 5",
+		},
+		{
+			description:                   "success validation with country GB and size equal to 1-10  [ASSEMBLING_COUNTRY_VALIDATION]",
+			validationStr:                 " [GB:1-10]",
+			hasErrors:                     false,
+			expectedCountryValidationInfo: CountryValidationInfo{minLen: 1, maxLen: 10},
+		},
+		{
+			description:                   "success validation with country GB and size equal to 2-120  [ASSEMBLING_COUNTRY_VALIDATION]",
+			validationStr:                 " [GB:12-120]",
+			hasErrors:                     false,
+			expectedCountryValidationInfo: CountryValidationInfo{minLen: 12, maxLen: 120},
+		},
+		{
+			description:                   "success validation with country GB and size equal to 10 [ASSEMBLING_COUNTRY_VALIDATION]",
+			validationStr:                 " [GB:10]",
+			hasErrors:                     false,
+			expectedCountryValidationInfo: CountryValidationInfo{minLen: 10, maxLen: 10},
 		},
 		// {
 		// 	description:   "success validation",
@@ -56,13 +75,13 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 
 	for _, c := range cases {
 		t.Run(c.description, func(t *testing.T) {
-			_, err := mountCountriesValidationInfos(c.validationStr)
+			cInfo, err := mountCountriesValidationInfos(c.validationStr)
 			if c.hasErrors {
 				assert.NotNil(t, err)
 				assert.Equal(t, c.expectedErrorMessage, err.Error())
 			} else {
-				//assert.Nil(t, err)
-				//assert.NotNil(t, customFieldValidationInfo)
+				assert.Nil(t, err)
+				assert.True(t, assertEquals(&c.expectedCountryValidationInfo, cInfo["GB"]))
 			}
 
 		})
@@ -126,4 +145,8 @@ func Test_IsNumericWorks(t *testing.T) {
 			assert.Equal(t, c.expectedResult, result)
 		})
 	}
+}
+
+func assertEquals(expectedCountryInfo, actualCountryInfo *CountryValidationInfo) bool {
+	return expectedCountryInfo.maxLen == actualCountryInfo.maxLen && expectedCountryInfo.minLen == actualCountryInfo.minLen
 }

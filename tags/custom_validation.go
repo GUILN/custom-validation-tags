@@ -18,7 +18,7 @@ type Symbol byte
 
 const (
 	validationOpener             Symbol = '['
-	validationCloser             Symbol = '}'
+	validationCloser             Symbol = ']'
 	countryValidationInitializer Symbol = ':'
 
 	countrySeparator       Symbol = '|'
@@ -92,14 +92,34 @@ var transictionTable = map[State]TransictionFunction{
 			*accumulator += string(entrySymbol)
 			return assemblingContryValidationFieldSize, nil
 		} else if entrySymbol == byte(numericLengthSeparator) {
-			(*countries)[*currentCountry].minLen = 0
+			(*countries)[*currentCountry].minLen = ParseToInt(*accumulator)
 			*accumulator = ""
 			return assemblingContryValidationFieldSizeMax, nil
+		} else if entrySymbol == byte(validationCloser) {
+			(*countries)[*currentCountry].maxLen = ParseToInt(*accumulator)
+			(*countries)[*currentCountry].minLen = ParseToInt(*accumulator)
+			*accumulator = ""
+			return finalState, nil
 		} else if entrySymbol == byte(validationSeparator) {
-			(*countries)[*currentCountry].maxLen = 0
-			(*countries)[*currentCountry].minLen = 0
+			(*countries)[*currentCountry].maxLen = ParseToInt(*accumulator)
+			(*countries)[*currentCountry].minLen = ParseToInt(*accumulator)
 			*accumulator = ""
 			return assemblingCountryValidation, nil
+		}
+		return invalidState, createUnexpectedSymbolError(entrySymbol, position)
+	},
+	assemblingContryValidationFieldSizeMax: func(entrySymbol byte, countries *map[string]*CountryValidationInfo, accumulator *string, currentCountry *string, position int) (State, error) {
+		if IsNumeric(entrySymbol) {
+			*accumulator += string(entrySymbol)
+			return assemblingContryValidationFieldSizeMax, nil
+		} else if entrySymbol == byte(validationSeparator) {
+			(*countries)[*currentCountry].maxLen = ParseToInt(*accumulator)
+			*accumulator = ""
+			return assemblingCountryValidation, nil
+		} else if entrySymbol == byte(validationCloser) {
+			(*countries)[*currentCountry].maxLen = ParseToInt(*accumulator)
+			*accumulator = ""
+			return finalState, nil
 		}
 		return invalidState, createUnexpectedSymbolError(entrySymbol, position)
 	},
@@ -117,6 +137,9 @@ func mountCountriesValidationInfos(validationStr string) (map[string]*CountryVal
 		currentSymbol = validationStr[i]
 		currentState, stateError = transictionTable[currentState](currentSymbol, &countriesValidationInfos, accumulator, currentCountry, i)
 
+		if currentState == finalState {
+			return countriesValidationInfos, nil
+		}
 		if currentState == invalidState {
 			return nil, stateError
 		}
@@ -132,6 +155,11 @@ func IsLetter(c byte) bool {
 func IsNumeric(c byte) bool {
 	_, err := strconv.ParseFloat(string(c), 64)
 	return err == nil
+}
+
+func ParseToInt(str string) int {
+	parsedInt, _ := strconv.ParseFloat(str, 64)
+	return int(parsedInt)
 }
 
 func createUnexpectedSymbolError(unexpectedSymbol byte, position int) error {
