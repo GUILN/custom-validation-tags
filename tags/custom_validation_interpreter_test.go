@@ -9,8 +9,6 @@ import (
 // Expected template:
 // [{country_code}:{validation},{validation} | {country_code}:{validation}]
 func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) {
-	//t.Skip("to be implemented.")
-
 	cases := []struct {
 		description                   string
 		validationStr                 string
@@ -96,11 +94,17 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 			hasErrors:                     false,
 			expectedCountryValidationInfo: map[string]*CountryValidationInfo{"GB": {minLen: 7, maxLen: 10, required: true}, "PT": {minLen: 5, maxLen: 5}, "AU": {minLen: 10, maxLen: 12, required: true}},
 		},
+		{
+			description:          "success validation",
+			validationStr:        "[GB:7-10,required | AU:5 | AU:10-12, required]",
+			hasErrors:            true,
+			expectedErrorMessage: "country defined twice",
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.description, func(t *testing.T) {
-			cInfo, err := mountCountriesValidationInfos(c.validationStr)
+			cInfo, err := compileCountriesValidationInfos(c.validationStr)
 			if c.hasErrors {
 				assert.NotNil(t, err)
 				assert.Equal(t, c.expectedErrorMessage, err.Error())

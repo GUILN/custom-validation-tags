@@ -7,7 +7,6 @@ import (
 
 type CountryValidationInfo struct {
 	fieldName string
-	country   string
 	minLen    int
 	maxLen    int
 	required  bool
@@ -49,9 +48,9 @@ const (
 	finalState                               State = "[FINAL]"
 )
 
-type TransictionFunction func(byte, *map[string]*CountryValidationInfo, *string, *string, int) (State, error)
+type TransitionFunction func(byte, *map[string]*CountryValidationInfo, *string, *string, int) (State, error)
 
-var transictionTable = map[State]TransictionFunction{
+var transitionTable = map[State]TransitionFunction{
 
 	initialState: func(entrySymbol byte, countries *map[string]*CountryValidationInfo, currentCountry *string, accumulator *string, position int) (State, error) {
 		if entrySymbol == byte(validationOpener) {
@@ -70,7 +69,7 @@ var transictionTable = map[State]TransictionFunction{
 			return assemblingCountryCode, nil
 		} else if entrySymbol == byte(countryValidationInitializer) {
 			if _, alreadyContaisCountry := (*countries)[*currentCountry]; alreadyContaisCountry {
-				return invalidState, fmt.Errorf("country already exists")
+				return invalidState, fmt.Errorf("country defined twice")
 			}
 
 			(*countries)[*currentCountry] = &CountryValidationInfo{}
@@ -172,7 +171,7 @@ var transictionTable = map[State]TransictionFunction{
 	},
 }
 
-func mountCountriesValidationInfos(validationStr string) (map[string]*CountryValidationInfo, error) {
+func compileCountriesValidationInfos(validationStr string) (map[string]*CountryValidationInfo, error) {
 	currentState := initialState
 	var currentSymbol byte
 	currentCountry := new(string)
@@ -182,7 +181,7 @@ func mountCountriesValidationInfos(validationStr string) (map[string]*CountryVal
 
 	for i := 0; i < len(validationStr); i++ {
 		currentSymbol = validationStr[i]
-		currentState, stateError = transictionTable[currentState](currentSymbol, &countriesValidationInfos, accumulator, currentCountry, i)
+		currentState, stateError = transitionTable[currentState](currentSymbol, &countriesValidationInfos, accumulator, currentCountry, i)
 
 		if currentState == finalState {
 			return countriesValidationInfos, nil
