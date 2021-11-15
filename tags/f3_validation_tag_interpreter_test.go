@@ -110,7 +110,7 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 
 	for _, c := range cases {
 		t.Run(c.description, func(t *testing.T) {
-			cInfo, err := compileCountriesValidationInfos(c.validationStr)
+			cInfo, err := CompileCountriesValidationInfos(c.validationStr)
 			if c.hasErrors {
 				assert.NotNil(t, err)
 				assert.Equal(t, c.expectedErrorMessage, err.Error())

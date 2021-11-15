@@ -6,10 +6,9 @@ import (
 )
 
 type CountryValidationInfo struct {
-	fieldName string
-	minLen    int
-	maxLen    int
-	required  bool
+	minLen   int
+	maxLen   int
+	required bool
 }
 
 //Symbols
@@ -171,7 +170,7 @@ var transitionTable = map[State]TransitionFunction{
 	},
 }
 
-func compileCountriesValidationInfos(validationStr string) (map[string]*CountryValidationInfo, error) {
+func CompileCountriesValidationInfos(validationStr string) (map[string]*CountryValidationInfo, error) {
 	currentState := initialState
 	var currentSymbol byte
 	currentCountry := new(string)
