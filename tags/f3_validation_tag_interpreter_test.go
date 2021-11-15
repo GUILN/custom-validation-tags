@@ -95,6 +95,12 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 			expectedCountryValidationInfo: map[string]*CountryValidationInfo{"GB": {minLen: 7, maxLen: 10, required: true}, "PT": {minLen: 5, maxLen: 5}, "AU": {minLen: 10, maxLen: 12, required: true}},
 		},
 		{
+			description:                   "success validation",
+			validationStr:                 "[GB:required]",
+			hasErrors:                     false,
+			expectedCountryValidationInfo: map[string]*CountryValidationInfo{"GB": {required: true}},
+		},
+		{
 			description:          "success validation",
 			validationStr:        "[GB:7-10,required | AU:5 | AU:10-12, required]",
 			hasErrors:            true,
