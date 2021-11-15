@@ -61,10 +61,28 @@ func Test_RetrieveValidateFieldsCreatesValidationStructAsExpected(t *testing.T) 
 			expectedCountryValidationInfo: CountryValidationInfo{minLen: 12, maxLen: 120},
 		},
 		{
-			description:                   "success validation with country GB and size equal to 10 [ASSEMBLING_COUNTRY_VALIDATION]",
-			validationStr:                 " [GB:10]",
+			description:                   "success validation with country GB and size equal to 10",
+			validationStr:                 " [GB:10 ]",
 			hasErrors:                     false,
 			expectedCountryValidationInfo: CountryValidationInfo{minLen: 10, maxLen: 10},
+		},
+		{
+			description:                   "success validation with country GB and size equal to 10 to 765 and is required [ASSEMBLING_COUNTRY_VALIDATION]",
+			validationStr:                 " [GB:10-765, required ]",
+			hasErrors:                     false,
+			expectedCountryValidationInfo: CountryValidationInfo{minLen: 10, maxLen: 765, required: true},
+		},
+		{
+			description:          "success validation with country GB and size equal to 10 to 765 and is required [ASSEMBLING_COUNTRY_VALIDATION]",
+			validationStr:        " [GB:10-765, ]",
+			hasErrors:            true,
+			expectedErrorMessage: "unexpected ] symbol in position 13",
+		},
+		{
+			description:          "success validation with country GB and size equal to 10 to 765 and is required [ASSEMBLING_COUNTRY_VALIDATION]",
+			validationStr:        " [GB:10-765, | ]",
+			hasErrors:            true,
+			expectedErrorMessage: "unexpected | symbol in position 13",
 		},
 		// {
 		// 	description:   "success validation",
@@ -148,5 +166,5 @@ func Test_IsNumericWorks(t *testing.T) {
 }
 
 func assertEquals(expectedCountryInfo, actualCountryInfo *CountryValidationInfo) bool {
-	return expectedCountryInfo.maxLen == actualCountryInfo.maxLen && expectedCountryInfo.minLen == actualCountryInfo.minLen
+	return expectedCountryInfo.maxLen == actualCountryInfo.maxLen && expectedCountryInfo.minLen == actualCountryInfo.minLen && expectedCountryInfo.required == actualCountryInfo.required
 }
