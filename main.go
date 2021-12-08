@@ -3,7 +3,7 @@ package main
 import (
 	"reflect"
 
-	"sandbox.io/tags/tags"
+	"github.com/GUILN/custom-validation-tags/tags"
 )
 
 type ValidationMatrix map[string]*map[string]*tags.CountryValidationInfo

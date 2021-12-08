@@ -1,4 +1,4 @@
-module sandbox.io/tags
+module github.com/GUILN/custom-validation-tags
 
 go 1.17
 
